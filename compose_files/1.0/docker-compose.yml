@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  mongodbservice:
+    image: mobilecoach/mongo:1.0.1
+    environment:
+      - MONGO_INITDB_DATABASE=mc
+    volumes:
+      - ./mc_global/mongo_data:/data/db
+    restart: always
+
+  tomcatservice:
+    image: mobilecoach/tomcat:1.0.1
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on: 
+      - mongodbservice
+      - deepstreamservice
+    volumes:
+      - ./mc_global/mc_data:/mc_data
+      - ./certs/keystore_demo:/keystore_demo
+      - ./tomcat/conf/server.xml:/usr/local/tomcat/conf/server.xml
+    restart: always 
+
+  deepstreamservice:
+    image: mobilecoach/deepstream.io:1.0.1
+    ports:
+      - "6020:6020"
+    depends_on: 
+      - mongodbservice
+    volumes:
+      - ./deepstream/config.yml:/etc/deepstream/config.yml
+      - ./letsencrypt/config/live/dymand-cdhi.ethz.ch/privkey.pem:/etc/deepstream/certs/privkey.pem
+      - ./letsencrypt/config/live/dymand-cdhi.ethz.ch/cert.pem:/etc/deepstream/certs/cert.pem
+      - ./letsencrypt/config/live/dymand-cdhi.ethz.ch/chain.pem:/etc/deepstream/certs/chain.pem
+    restart: always
